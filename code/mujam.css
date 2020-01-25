@@ -10,6 +10,9 @@
     #div1 { 
       white-space: nowrap;
     }
+    div{
+        display: contents;
+    }
     select, #out2 {
         font: 17px me_quran, serif;
         margin-right: 4px;

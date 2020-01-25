@@ -43,6 +43,10 @@ const rootToCounts = new Map();
  */
 const wordToRefs = new Map();
 /**
+ * Object data to communicate with BahisQurani:finder.
+ */
+let searched = {refA:[],word:""};
+/**
  * returns Buckwalter code of the current item in menu2
  */
 function currentRoot() {
@@ -283,6 +287,8 @@ function displayRoots(ra) { //root array in Arabic
  * @param {Array} refA Array of page references (chapter:verse ..)
  */
 function displayRef(word, [page, refA]) {
+    searched.refA = refA;
+    searched.word=word;
     // put three zeros on the first of the number (K)
     function threeDigits(k) { //same as (""+k).padStart(3,"0")
         let s = "" + k;
@@ -537,3 +543,7 @@ function doHover(evt) {  //listener for each td element
     bilgi.style.display = "block"
 }
 
+function openFinder(){
+
+    window.open('https://a0m0rajab.github.io/BahisQurani/finder#rl='+searched.word+";"+searched.refA.join().replace(" ",","), "finder")
+}
