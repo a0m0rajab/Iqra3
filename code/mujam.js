@@ -545,5 +545,5 @@ function doHover(evt) {  //listener for each td element
 
 function openFinder(){
 
-    window.open('https://a0m0rajab.github.io/BahisQurani/finder#rl='+searched.word+";"+searched.refA.join().replace(" ",","), "finder")
+    window.open('https://a0m0rajab.github.io/BahisQurani/finder#rl='+searched.word+";"+searched.refA.join().replace(/ /g,","), "finder")
 }
