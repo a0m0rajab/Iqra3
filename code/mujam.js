@@ -1,176 +1,17 @@
-"use strict";
-// Use import and export to avoid calling files in the main page... would be even much prettier and clearner to call it at another place.
+import * as mjm from "./mujamUtil.js";
 import * as common from './common.js';
-import * as util from './utilities.js';
-
-console.log("test")
+import * as util from './utilities.js'; 
+let sajda = mjm.sajda;
 /**
  * div element that shows page info
  */
-var bilgi;
-/**
- * Global array to hold the places of Sajda.
- * used in marking sajdah verses
- */
-var sajda;
+var  bilgi;
 /**
  * child window (or tab) to display Quran
  * the same window is used on each click
  * (this is much better than <a> tag)
  */
 var iqra;
-/**
- * base color in the table -- default is blue
- * hue indicates angle in color wheel
- */
-var HUE = (common.isRemote() && localStorage.mujamHue) || 240
-
-/**
- * A map holds the letters and its roots.
- * set at report2 @see report2
- */
-const letterToRoots = new Map();
-/**
- * A map holds the roots and its words.
- * set at report2 @see report2
- */
-const rootToWords = new Map();
-/**
- * A map holds the roots and its counts.
- * set at report2 @see report2
- */
-const rootToCounts = new Map();
-/**
- * A map holds the words and its references.
- * set at report2 @see report2
- */
-const wordToRefs = new Map();
-/**
- * returns Buckwalter code of the current item in menu2
- */
-function currentRoot() {
-    if (!menu2.value) return null
-    let [v] = menu2.value.split(common.EM_SPACE)
-    return toBuckwalter(v)
-}
-
-/**
- * 
- * Used to parse indexes from a string encoded by encode36 and add it to index array (indA)
- * 
- * @param {string} str The chapter number.
- * @param {Array} indA index. 
- * 
- */
-function addIndexes(str, indA) {
-    for (let j = 0; j < str.length; j += 3) {
-        let code = str.substring(j, j + 3);
-        indA.push(util.decode36(code));
-    }
-}
-/**
- * 
- * Get the page of index and add it to page array and the holded verses of the page to refA array.
- * note that: Page array are equal to refA array.
- * 
- * @param {array} indA index array which parsed from add indexes.
- * @returns {array} The index(page number,refA string). 
- * 
- */
-function indexToArray(indA) {
-    let page = [],
-        refA = [],
-        prev = -1;
-    for (let i of indA) {
-        let [c, v] = util.toCV(i);
-        let cv = c + ":" + v;
-        let p = util.pageOf(c, v);
-        // if the page are same as before.
-        if (prev == p)
-        // get pop() as the last element of the array, 
-        // then add CV at the end 
-            cv = refA.pop() + " " + cv;
-        else {
-            page.push(p);
-            prev = p
-        }
-
-        refA.push(cv);
-    }
-    // only used in tests.
-    page.push(999); //999 is sentinel
-    return [page, refA];
-}
-/**
- * Add indexes to array, then parse this array with its pages.
- * @see addIndexes
- * @see indexToArray. 
- * @param {str} str index array which parsed from add indexes.
- * @returns {array} array holds pages number and references number 
- * 
- */
-function parseRefs(str) {
-    let indA = [];
-    addIndexes(str, indA);
-    return indexToArray(indA)
-}
-/**
- * Parsing and using remote data. 
- * @see makeMenu
- * 
- * @param {string} t text from remote data.
- */
-function report2(t) {
-    function convert(s) {
-        let [w, n] = s.split(' ')
-        let a = common.toArabic(w)
-        //convert space to em-space " "
-        return [a, a+common.EM_SPACE+n] 
-    }
-    let line = t.split('\n')
-    let m = line.length - 1
-    console.log(t.length + " chars " + m + " lines");
-    let i = 0;
-    while (i < m) { //for each line
-        let [root, number] = convert(line[i])
-        rootToCounts.set(root, number);
-        let j = i + 1
-        let list = []
-        while (j < m) {
-            let [xxx, s] = convert(line[j])
-            let k = s.indexOf('\t')
-            if (k <= 0) break;
-            let word = s.substring(0, k)
-            let refs = s.substring(k + 1)
-            wordToRefs.set(word, refs)
-            list.push(word); j++;
-        }
-        i = j;
-        list.sort();
-        let ch = root[0]; //first char
-        let x = letterToRoots.get(ch);
-        if (x) x.push(number);
-        else letterToRoots.set(ch, [number]);
-        rootToWords.set(number, list);
-    }
-    let keys = [...letterToRoots.keys()];
-    // sort the root list for each letter
-    for (let k of keys) letterToRoots.get(k).sort()
-    // sort and set menu1 (letters)
-    makeMenu(menu1, keys.sort());
-    if (!gotoHashRoot()) selectRoot("سجد");
-}
-/**
- * Read data file from link, then parse it.
- * @see report2
- */
-function readData() {
-    //const DATA_URL = "https://maeyler.github.io/Iqra3/data/" in common.js
-    fetch(common.DATA_URL   +"refs.txt")
-        .then(r => r.text()) //response
-        .then(report2); //text
-}
-
 /**
  * Make the targeted menu the document has three.(letters, roots, words)
  * The first element  will be selected.
@@ -192,7 +33,7 @@ function selectLetter(ch) {
     if (!ch) ch = menu1.value;
     else if (ch == menu1.value) return;
     else menu1.value = ch;
-    makeMenu(menu2, letterToRoots.get(ch));
+    makeMenu(menu2, mjm.letterToRoots.get(ch));
     menu2.value = '';
 }
 /**
@@ -205,10 +46,10 @@ function selectRoot(root, modifyHash=true) { //root in Arabic
     else if (menu2.value.startsWith(root)) return;
     else {
       selectLetter(root.charAt(0))
-      menu2.value = rootToCounts.get(root);
+      menu2.value = mjm.rootToCounts.get(root);
     }
-    let cnt = rootToCounts.get(root);
-    let list = rootToWords.get(cnt);
+    let cnt = mjm.rootToCounts.get(root);
+    let list = mjm.rootToWords.get(cnt);
     let nL = list? list.length : 0;
     if (list) makeMenu(menu3, list);
     if (nL > 1)
@@ -231,6 +72,7 @@ function selectRoot(root, modifyHash=true) { //root in Arabic
     //history.pushState('', '', "#r=" + b)
     showSelections(true)
 }
+
 /**
  * Select word, if undefined menu3 values will be the selected one.
  * when its used combine will be shown.
@@ -249,33 +91,20 @@ function selectWord(word) { //called by menu3 only
     combine.hidden = false;
     let str = wordToRefs.get(word);
     //let [page, refA] = parseRefs(str);
-    displayRef(word, parseRefs(str));
+    displayRef(word, mjm.parseRefs(str));
 }
-/**
- * display specified roots, hide the menus.
- * 
- * @param {Array} roots to be displayed
- */
-function getIndicesOf(root) {
-    let cnt = rootToCounts.get(root);
-    let list = rootToWords.get(cnt);
-    let indA = [];
-    for (let w of list) {
-        addIndexes(wordToRefs.get(w), indA);
-    }
-    indA.sort((a, b) => (a - b));
-    return indA
-}
+
 function displayRoots(ra) { //root array in Arabic
     //console.log(ra)
     if (!ra.length) throw "displayRoots: "+ra.length
-    let i1 = getIndicesOf(ra[0]);
+    let i1 = mjm.getIndicesOf(ra[0]);
     for (let k=1; k<ra.length; k++) {
-       let i2 = getIndicesOf(ra[k])
+       let i2 = mjm.getIndicesOf(ra[k])
        i1 = i1.filter(x=> i2.includes(x)) //intersection
     }
-    let a = ra.map(x => rootToCounts.get(x))
-    displayRef(a.join(' + '), indexToArray(i1));
+    
+    let a = ra.map(x => mjm.rootToCounts.get(x))
+    displayRef(a.join(' + '), mjm.indexToArray(i1));
     selectRoot(ra[0], false)  //adjust menus
 }
 /**
@@ -296,7 +125,7 @@ function displayRef(word, [page, refA]) {
     function toColor(n) {
         if (n == 0) return ""
         let L = 96 - 6 * Math.min(n, 16)
-        return "background: hsl("+HUE+", 100%, "+L+"%"
+        return "background: hsl("+mjm.HUE+", 100%, "+L+"%"
     }
     // m number of juzz, 20 pages per juzz.
     // make the table
@@ -356,7 +185,7 @@ function displayRef(word, [page, refA]) {
     for (let x of tablo.querySelectorAll('td')) {
       x.onmouseenter = doHover
       x.onmouseleave = () => {
-        if (!menuK.style.display) hideElement(bilgi)
+        if (!menuK.style.display) common.hideElement(bilgi)
       }
     }
     bilgi = document.createElement('div') //lost within table
@@ -385,7 +214,7 @@ function doClick(evt) {
         h = "#p="+p;
     }
     console.log(h); hideMenus()
-    iqra = window.open("reader"+EXT + h, "iqra")
+    iqra = window.open("reader"+common.EXT + h, "iqra")
 }
 /**
  * Open Corpus quran link that related to the selected word specific word. 
@@ -431,7 +260,7 @@ function gotoHashRoot() {
     let title = '', refs = h.substring(1)
     if (refs.includes('='))
         [title, refs] = refs.split('=')
-    displayRef(title, parseRefs(refs))
+    displayRef(title, mjm.parseRefs(refs))
     menu2.value=''; menu3.value=''
     combine.hidden = true
   }
@@ -448,20 +277,28 @@ function gotoHashRoot() {
     showSelections(false);
     // mark places for sajda
     let str = "1w82bu2i62ne2s430l38z3gg3pq42y4a74qm5k15q5";
-    [sajda, ] = parseRefs(str);
+    [sajda, ] = mjm.parseRefs(str);
 //sajda = [175, 250, 271, 292, 308, 333, 364, 378, 415, 453, 479, 527, 589, 597, 999]
     let letters = [];
     for (let c=1575; c<1609; c++) letters.push(String.fromCharCode(c));
     makeMenu(menu1, letters); 
     try {
         out2.innerText = "Reading data";
-        readData();
+        mjm.readData().then( (element) => {
+            // console.log(mjm.indexToArray(mjm.getIndicesOf("سجد"))[1])
+
+    // sort and set menu1 (letters)
+    makeMenu(menu1, element.sort());
+    if (!gotoHashRoot()) selectRoot("سجد");
+        });
+      
     } catch(err) { 
         out2.innerText = ""+err;
     }
     window.name = "mujam"
     window.onhashchange = gotoHashRoot
     menuFn()
+
 }
 
   /**
@@ -497,10 +334,10 @@ function menuFn() {
       menuItem(evt.key.toUpperCase())
   }
   window.hideMenus = () => { 
-      hideElement(menuK); hideElement(bilgi)
+      common.hideElement(menuK); common.hideElement(bilgi)
   }
   window.showMenuK = (evt) => { 
-      evt.preventDefault(); //hideElement(bilgi)
+      evt.preventDefault(); //common.hideElement(bilgi)
       let y = Math.max(evt.clientY-200, 0)
       setPosition(menuK, evt.clientX, y)
   }
@@ -525,7 +362,7 @@ function doHover(evt) {  //listener for each td element
     let p = getPageOf(evt.target)
     bilgi.innerHTML = util.pRefs[p]?
          "<div class=t2>" + util.pRefs[p]  + "</div>"
-       : "<div class=t1>" + pLabel[p] + "</div>"
+       : "<div class=t1>" + util.pLabel[p] + "</div>"
     evt.target.append(bilgi); 
     //center over evt.target
     //setPosition(bilgi, evt.clientX, 20, 180)
@@ -539,5 +376,4 @@ function doHover(evt) {  //listener for each td element
     bilgi.style.left = (dx)+'px'
     bilgi.style.display = "block"
 }
-
 initMujam();
