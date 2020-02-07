@@ -1,4 +1,5 @@
 "use strict";
+import * as common from './common.js'; 
 
 /**
  * Encode a number to base 36.
@@ -7,7 +8,7 @@
  * @param {number} n The string to be encoded
  * @returns {string} encoded string.
  */
-function encode36(n) {
+export function encode36(n) {
     n += 36 * 36;
     return n.toString(36);
 }
@@ -18,7 +19,7 @@ function encode36(n) {
  * @param {string} s The string to be decoded
  * @returns {number} decoded number 
  */
-function decode36(s) {
+export function decode36(s) {
     return Number.parseInt(s, 36) - 36 * 36;
 }
 
@@ -33,7 +34,7 @@ function decode36(s) {
  *
  *     encodeLine('25:60 27:1 36:83')
  */
-function encodeLine(s) {
+export function encodeLine(s) {
     const sa = s.split(" ");
     var v = "";
     for (var j = 0; j < sa.length; j++) {
@@ -55,7 +56,7 @@ function encodeLine(s) {
  *
  *     decodeLine('38z3fs3x8')
  */
-function decodeLine(s) {
+export function decodeLine(s) {
     var v = "";
     for (var j = 0; j < s.length; j += 3) {
         const c = s.substring(j, j + 3);
@@ -65,7 +66,7 @@ function decodeLine(s) {
     return v;
 }
 // legacy code.
-function charCode(i) {
+export function charCode(i) {
     return String.fromCharCode(MIN + i);
 }
 /**
@@ -78,7 +79,7 @@ function charCode(i) {
  * 
  * 
  */
-function indexOf(c, v) {
+export function indexOf(c, v) {
     // check last holds the summed number of verses till that chapter..
     return last[c - 1] + v;
 }
@@ -93,7 +94,7 @@ function indexOf(c, v) {
  * 
  * 
  */
-function pageOf(c, v) {
+export function pageOf(c, v) {
     const i = indexOf(c, v);
     // n=number;
     var p = Math.trunc(i * nPage / nVerse);
@@ -109,7 +110,7 @@ function pageOf(c, v) {
  * @param {number} i index number.
  * @returns {number} chapter number.
  */
-function toChapter(i) {
+export function toChapter(i) {
     // loop all chapter and check if the index is in it, since last holds the summed number of indexes till that chapter.
     for (var c = 1; c <= nChap; c++)
         if (i <= last[c]) return c;
@@ -123,7 +124,7 @@ function toChapter(i) {
  * @returns {number} The index. 
  * 
  */
-function toCV(i) {
+export function toCV(i) {
     const c = toChapter(i);
     return [c, i - last[c - 1]];
 }
@@ -154,14 +155,14 @@ const nChap = last.length - 1,
  * sName: Sura names
  * pLabel: show the sura name, Chapter, Last vers of this page from the sura and page number.
  */
-var index, nPage, sName; //global
-const pLabel = [''], pRefs = ['']  //pages count from 1
+export var index, nPage, sName; //global
+export const pLabel = [''], pRefs = ['']  //pages count from 1
 /**
  * initialize the utilities and set the attributes.
  *  
  * 
  */
-function init() {
+export function init() {
     console.log(nChap + " suras -> " + nVerse);
     // count of verses in a page.
     const count = [0, 12, 11, 8, 5, 8, 11, 9, 4, 8, 7, 7, 5, 5, 8, 4, 7, 7, 7, 8, 7, 4, 8, 10, 6, //7,5
@@ -317,4 +318,7 @@ Nas`;
     }
     console.log(nPage + " pages -> " + index[nPage]);
 }
+let EM_SPACE = String.fromCharCode(8195)
+
 init()
+export * from './utilities.js';
